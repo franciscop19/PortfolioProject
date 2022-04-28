@@ -1,5 +1,5 @@
--- Convierto valores vacios ('') a NULL values en tabla CovidVaccinations:
-/* 
+-- When importing one of the Excel tables (CovidVaccinations), it had empty values ('') and no NULL values. So to convert those empty values to NULL values:
+
 UPDATE CovidVaccinations 
 SET [new_tests] = NULLIF([new_tests], '')
 UPDATE CovidVaccinations 
@@ -82,7 +82,6 @@ UPDATE CovidVaccinations
 SET [excess_mortality] = NULLIF([excess_mortality], '')
 UPDATE CovidVaccinations 
 SET [excess_mortality_cumulative_per_million] = NULLIF([excess_mortality_cumulative_per_million], '')
-*/
 
 
 
@@ -110,7 +109,6 @@ SELECT location,
 	   total_deaths,
 	   DeathPercentage = (total_deaths/total_cases)*100
 FROM CovidDeaths
---WHERE location = 'Argentina'
 ORDER BY 1, 2
 
 
@@ -122,7 +120,6 @@ SELECT location,
 	   population,
 	   PopulationPercentage = (total_cases/population)*100
 FROM CovidDeaths
---WHERE location = 'Argentina'
 ORDER BY 1, 2
 
 
@@ -137,7 +134,7 @@ GROUP BY location, population
 ORDER BY InfectionRate DESC
 
 
--- Highest Death Rates per Country
+-- Highest death rates per country
 
 SELECT location,
 	   [TotalDeathsCount] = MAX(cast(total_deaths as INT)),
@@ -149,7 +146,7 @@ GROUP BY location, population
 ORDER BY DeathRate DESC
 
 
--- Highest Death Rates per Continent
+-- Highest death rates per continent
 
 SELECT continent,
 	   [DeathRate] = MAX((total_deaths/population))*100,
@@ -159,7 +156,8 @@ WHERE continent IS NOT NULL
 GROUP BY continent
 ORDER BY DeathRate DESC
 
--- There was a continent that had '' data, so I transformed it to NULL values for the code to work:
+
+-- There was a continent that had '' data, so I transformed it to NULL value for the code to work:
 
 /* 
 UPDATE CovidDeaths
@@ -185,6 +183,7 @@ GROUP BY continent
 ORDER BY DeathRate DESC
 
 
+
 -- Looking at global numbers by date
 
 SELECT date,
@@ -197,11 +196,11 @@ GROUP BY date
 ORDER BY 1, 2
 
 
--- Global numbers to this day
+-- Today's total global numbers:
 
 SELECT [TotalCases] = SUM(new_cases),
-	   [TotalDeaths] = SUM(CAST(new_deaths AS INT)),
-	   [TotalDeathRate] = ((SUM(CAST(new_deaths AS INT)))/(SUM(new_cases)))*100
+       [TotalDeaths] = SUM(CAST(new_deaths AS INT)),
+       [TotalDeathRate] = ((SUM(CAST(new_deaths AS INT)))/(SUM(new_cases)))*100
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 ORDER BY 1, 2
@@ -226,7 +225,7 @@ WHERE A.continent IS NOT NULL
 
 
 
--- Using CTE 
+-- Using CTE to look at the vaccination rate
 
 WITH PopvsVac (continent, location, date, population, new_vaccinations, vaccinated_people)
 AS
@@ -248,7 +247,7 @@ FROM PopvsVac
 
 
 
--- With Temp table (another way of doing the previous analysis)
+-- Another way of doing the previous analysis: with a Temp table
 
 DROP TABLE IF EXISTS
 CREATE TABLE PercentPopulationVaccinated
@@ -277,7 +276,7 @@ FROM PercentPopulationVaccinated
 
 
 
--- Views for visualizations:
+-- Creating views for visualizations:
 
 CREATE VIEW View_PercentPopulationVaccinated AS
 SELECT A.continent,
