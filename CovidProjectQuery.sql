@@ -159,10 +159,9 @@ ORDER BY DeathRate DESC
 
 -- There was a continent that had '' data, so I transformed it to NULL value for the code to work:
 
-/* 
 UPDATE CovidDeaths
 SET continent = NULLIF(continent, '')
-*/
+
 
 -- Checking if it worked:
 
