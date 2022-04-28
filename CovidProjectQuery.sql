@@ -92,43 +92,43 @@ ORDER BY 3, 4
 
 
 SELECT location, 
-	   date,
-	   total_cases,
-	   new_cases,
-	   total_deaths,
-	   population
+       date,
+       total_cases,
+       new_cases,
+       total_deaths,
+       population
 FROM CovidDeaths
-ORDER BY 1, 2
+ORDER BY location, date
 
 
 -- Looking at Total Cases vs Total Deaths
 
 SELECT location, 
-	   date,
-	   total_cases,
-	   total_deaths,
-	   DeathPercentage = (total_deaths/total_cases)*100
+       date,
+       total_cases,
+       total_deaths,
+       DeathPercentage = (total_deaths/total_cases)*100
 FROM CovidDeaths
-ORDER BY 1, 2
+ORDER BY location, date
 
 
 -- Total Cases vs Population
 
 SELECT location, 
-	   date,
-	   total_cases,
-	   population,
-	   PopulationPercentage = (total_cases/population)*100
+       date,
+       total_cases,
+       population,
+       PopulationPercentage = (total_cases/population)*100
 FROM CovidDeaths
-ORDER BY 1, 2
+ORDER BY location, date
 
 
 -- Looking at countries with highest infection rate vs population
 
 SELECT location,
-	   [HighestInfectionCount] = MAX(total_cases),
-	   population,
-	   [InfectionRate] = MAX((total_cases/population))*100
+       [HighestInfectionCount] = MAX(total_cases),
+       population,
+       [InfectionRate] = MAX((total_cases/population))*100
 FROM CovidDeaths
 GROUP BY location, population
 ORDER BY InfectionRate DESC
@@ -137,9 +137,9 @@ ORDER BY InfectionRate DESC
 -- Highest death rates per country
 
 SELECT location,
-	   [TotalDeathsCount] = MAX(cast(total_deaths as INT)),
-	   population,
-	   [DeathRate] = MAX((total_deaths/population))*100
+       [TotalDeathsCount] = MAX(cast(total_deaths as INT)),
+       population,
+       [DeathRate] = MAX((total_deaths/population))*100
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY location, population
@@ -149,8 +149,8 @@ ORDER BY DeathRate DESC
 -- Highest death rates per continent
 
 SELECT continent,
-	   [DeathRate] = MAX((total_deaths/population))*100,
-	   [TotalDeathsCount] = MAX(cast(total_deaths as INT))
+       [DeathRate] = MAX((total_deaths/population))*100,
+       [TotalDeathsCount] = MAX(cast(total_deaths as INT))
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY continent
@@ -174,8 +174,8 @@ GROUP BY continent
 -- Running it again:
 
 SELECT continent,
-	   [DeathRate] = MAX((total_deaths/population))*100,
-	   [TotalDeathsCount] = MAX(cast(total_deaths as INT))
+       [DeathRate] = MAX((total_deaths/population))*100,
+       [TotalDeathsCount] = MAX(cast(total_deaths as INT))
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY continent
@@ -186,13 +186,13 @@ ORDER BY DeathRate DESC
 -- Looking at global numbers by date
 
 SELECT date,
-	   [SumNewCases] = SUM(new_cases),
-	   [SumNewDeaths] = SUM(CAST(new_deaths AS INT)),
-	   [SumDeathRate] = ((SUM(CAST(new_deaths AS INT)))/(SUM(new_cases)))*100
+       [SumNewCases] = SUM(new_cases),
+       [SumNewDeaths] = SUM(CAST(new_deaths AS INT)),
+       [SumDeathRate] = ((SUM(CAST(new_deaths AS INT)))/(SUM(new_cases)))*100
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY date
-ORDER BY 1, 2
+ORDER BY date, [SumNewCases]
 
 
 -- Today's total global numbers:
@@ -202,7 +202,7 @@ SELECT [TotalCases] = SUM(new_cases),
        [TotalDeathRate] = ((SUM(CAST(new_deaths AS INT)))/(SUM(new_cases)))*100
 FROM CovidDeaths
 WHERE continent IS NOT NULL
-ORDER BY 1, 2
+ORDER BY [TotalCases], [TotalDeaths]
 
 
 -- Joining the 2 tables to look at Total population vs Vaccinations
@@ -213,11 +213,11 @@ JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 
 
 SELECT A.continent,
-	   A.location,
-	   A.date,
-	   A.population,
-	   B.new_vaccinations,
-	   [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
+       A.location,
+       A.date,
+       A.population,
+       B.new_vaccinations,
+       [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
 FROM CovidDeaths A
 JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 WHERE A.continent IS NOT NULL
@@ -230,18 +230,18 @@ WITH PopvsVac (continent, location, date, population, new_vaccinations, vaccinat
 AS
 (
 SELECT A.continent,
-	   A.location,
-	   A.date,
-	   A.population,
-	   B.new_vaccinations,
-	   [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
+       A.location,
+       A.date,
+       A.population,
+       B.new_vaccinations,
+       [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
 FROM CovidDeaths A
 JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 WHERE A.continent IS NOT NULL
 )
 
 SELECT *,
-	   [vaccination_rate] = (vaccinated_people/population)*100
+       [vaccination_rate] = (vaccinated_people/population)*100
 FROM PopvsVac
 
 
@@ -261,11 +261,11 @@ vaccinated_people numeric
 
 INSERT INTO PercentPopulationVaccinated
 SELECT A.continent,
-	   A.location,
-	   A.date,
-	   A.population,
-	   B.new_vaccinations,
-	   [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
+       A.location,
+       A.date,
+       A.population,
+       B.new_vaccinations,
+       [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
 FROM CovidDeaths A
 JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 WHERE A.continent IS NOT NULL
@@ -279,11 +279,11 @@ FROM PercentPopulationVaccinated
 
 CREATE VIEW View_PercentPopulationVaccinated AS
 SELECT A.continent,
-	   A.location,
-	   A.date,
-	   A.population,
-	   B.new_vaccinations,
-	   [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
+       A.location,
+       A.date,
+       A.population,
+       B.new_vaccinations,
+       [vaccinated_people] = SUM(CAST(FLOOR(B.new_vaccinations) AS BIGINT)) OVER(PARTITION BY A.location ORDER BY A.location, A.date)
 FROM CovidDeaths A
 JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 WHERE A.continent IS NOT NULL
@@ -292,29 +292,29 @@ WHERE A.continent IS NOT NULL
 
 CREATE VIEW View_CasesVsDeaths AS
 SELECT location, 
-	   date,
-	   total_cases,
-	   total_deaths,
-	   DeathPercentage = (total_deaths/total_cases)*100
+       date,
+       total_cases,
+       total_deaths,
+       DeathPercentage = (total_deaths/total_cases)*100
 FROM CovidDeaths
 
 
 
 CREATE VIEW View_CasesVsPopulation AS
 SELECT location, 
-	   date,
-	   total_cases,
-	   population,
-	   PopulationPercentage = (total_cases/population)*100
+       date,
+       total_cases,
+       population,
+       PopulationPercentage = (total_cases/population)*100
 FROM CovidDeaths
 
 
 
 CREATE VIEW View_InfectionRate AS
 SELECT location,
-	   [HighestInfectionCount] = MAX(total_cases),
-	   population,
-	   [InfectionRate] = MAX((total_cases/population))*100
+       [HighestInfectionCount] = MAX(total_cases),
+       population,
+       [InfectionRate] = MAX((total_cases/population))*100
 FROM CovidDeaths
 GROUP BY location, population
 
@@ -322,9 +322,9 @@ GROUP BY location, population
 
 CREATE VIEW View_DeathRatePerCountry AS
 SELECT location,
-	   [TotalDeathsCount] = MAX(cast(total_deaths as INT)),
-	   population,
-	   [DeathRate] = MAX((total_deaths/population))*100
+       [TotalDeathsCount] = MAX(cast(total_deaths as INT)),
+       population,
+       [DeathRate] = MAX((total_deaths/population))*100
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY location, population
@@ -333,8 +333,8 @@ GROUP BY location, population
 
 CREATE VIEW View_DeathsPerContinent AS
 SELECT continent,
-	   [DeathRate] = MAX((total_deaths/population))*100,
-	   [TotalDeathsCount] = MAX(cast(total_deaths as INT))
+       [DeathRate] = MAX((total_deaths/population))*100,
+       [TotalDeathsCount] = MAX(cast(total_deaths as INT))
 FROM CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY continent
