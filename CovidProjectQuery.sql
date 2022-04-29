@@ -277,6 +277,9 @@ FROM PercentPopulationVaccinated
 
 -- Creating views for visualizations:
 
+
+1.
+
 CREATE VIEW View_PercentPopulationVaccinated AS
 SELECT A.continent,
        A.location,
@@ -289,6 +292,7 @@ JOIN CovidVaccinations B ON A.location = B.location AND A.date = B.date
 WHERE A.continent IS NOT NULL
 
 
+2.
 
 CREATE VIEW View_CasesVsDeaths AS
 SELECT location, 
@@ -299,6 +303,7 @@ SELECT location,
 FROM CovidDeaths
 
 
+3.
 
 CREATE VIEW View_CasesVsPopulation AS
 SELECT location, 
@@ -309,6 +314,7 @@ SELECT location,
 FROM CovidDeaths
 
 
+4.
 
 CREATE VIEW View_InfectionRate AS
 SELECT location,
@@ -319,6 +325,7 @@ FROM CovidDeaths
 GROUP BY location, population
 
 
+5.
 
 CREATE VIEW View_DeathRatePerCountry AS
 SELECT location,
@@ -330,6 +337,7 @@ WHERE continent IS NOT NULL
 GROUP BY location, population
 
 
+6.
 
 CREATE VIEW View_DeathsPerContinent AS
 SELECT continent,
